@@ -9,5 +9,5 @@ public class Customer : Base
     public string Password { get; set; } = string.Empty;
     public string? Phone { get; set; } = string.Empty;
     public string? Image { get; set; } = string.Empty;
-    public Address? Address { get; set; } = new();
+    public Address Address { get; set; } = new();
 }
