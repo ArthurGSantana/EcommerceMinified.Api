@@ -15,12 +15,12 @@ public class PostgresDbContext : DbContext
         {
             var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
             var configuration = new ConfigurationBuilder()
-                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../Desafio4.Api"))
+                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../EcommerceMinified.Api"))
                 .AddJsonFile("appsettings.json")
                 .AddJsonFile($"appsettings.{environment}.json", optional: true)
                 .Build();
 
-            var connectionString = configuration.GetConnectionString("DatabasePostGres");
+            var connectionString = configuration.GetConnectionString("DatabasePostgres");
 
             optionsBuilder.UseNpgsql(connectionString);
         }
