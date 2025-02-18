@@ -1,3 +1,4 @@
+using Desafio4.Api.Filters;
 using EcommerceMinified.IoC;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,7 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>().AddProblemDetails();
 
 var app = builder.Build();
 
