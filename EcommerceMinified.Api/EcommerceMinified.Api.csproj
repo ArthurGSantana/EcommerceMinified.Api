@@ -15,4 +15,8 @@
     <Folder Include="Controllers\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\EcommerceMinified.IoC\EcommerceMinified.IoC.csproj" />
+  </ItemGroup>
+
 </Project>
