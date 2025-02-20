@@ -11,4 +11,6 @@ public interface IUnitOfWork
     IRepositoryBase<Order> OrderRepository { get; }
     IRepositoryBase<OrderItem> OrderItemRepository { get; }
     IRepositoryBase<Address> AddressRepository { get; }
+
+    Task CommitPostresAsync();
 }
