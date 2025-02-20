@@ -1,4 +1,5 @@
 using System;
+using AutoMapper;
 using EcommerceMinified.Domain.Entity;
 using EcommerceMinified.Domain.Enum;
 using EcommerceMinified.Domain.Exceptions;
@@ -8,7 +9,7 @@ using EcommerceMinified.Domain.ViewModel.DTOs;
 
 namespace EcommerceMinified.Application.Services;
 
-public class CustomerService(IUnitOfWork _unitOfWork) : ICustomerService
+public class CustomerService(IUnitOfWork _unitOfWork, IMapper _mapper) : ICustomerService
 {
     public async Task<CustomerDto> CreateCustomerAsync(CustomerDto customer)
     {
@@ -19,29 +20,12 @@ public class CustomerService(IUnitOfWork _unitOfWork) : ICustomerService
             throw new EcommerceMinifiedDomainException("Customer already exists", ErrorCodeEnum.AlreadyExists);
         }
 
-        var newCustomer = new Customer
-        {
-            Name = customer.Name,
-            Email = customer.Email,
-            Password = customer.Password,
-            Phone = customer.Phone,
-            Image = customer.Image,
-            Address = new Address
-            {
-                Street = customer.Address.Street,
-                Number = customer.Address.Number,
-                Complement = customer.Address.Complement,
-                Neighborhood = customer.Address.Neighborhood,
-                City = customer.Address.City,
-                State = customer.Address.State,
-                ZipCode = customer.Address.ZipCode
-            }
-        };
+        var newCustomer = _mapper.Map<Customer>(customer);
 
         _unitOfWork.CustomerRepository.Insert(newCustomer);
         await _unitOfWork.CommitPostresAsync();
 
-        return 
+        return _mapper.Map<CustomerDto>(newCustomer);
     }
 
     public Task DeleteCustomerAsync(Guid id)
@@ -59,7 +43,7 @@ public class CustomerService(IUnitOfWork _unitOfWork) : ICustomerService
         throw new NotImplementedException();
     }
 
-    public Task<Customer> UpdateCustomerAsync(Customer customer)
+    public Task<CustomerDto> UpdateCustomerAsync(CustomerDto customer)
     {
         throw new NotImplementedException();
     }
