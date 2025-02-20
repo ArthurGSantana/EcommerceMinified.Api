@@ -10,5 +10,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\EcommerceMinified.Data.Postgres\EcommerceMinified.Data.Postgres.csproj" />
+    <ProjectReference Include="..\EcommerceMinified.Data\EcommerceMinified.Data.csproj" />
   </ItemGroup>
 </Project>
