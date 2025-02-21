@@ -28,23 +28,50 @@ public class CustomerService(IUnitOfWork _unitOfWork, IMapper _mapper) : ICustom
         return _mapper.Map<CustomerDto>(newCustomer);
     }
 
-    public Task DeleteCustomerAsync(Guid id)
+    public async Task DeleteCustomerAsync(Guid id)
     {
-        throw new NotImplementedException();
+        var exists = await _unitOfWork.CustomerRepository.GetAsync(false, null, x => x.Id == id);
+
+        if (exists == null)
+        {
+            throw new EcommerceMinifiedDomainException("Customer not found", ErrorCodeEnum.NotFound);
+        }
+
+        _unitOfWork.CustomerRepository.Delete(exists);
+        await _unitOfWork.CommitPostresAsync();
     }
 
-    public Task<Customer> GetCustomerByIdAsync(Guid id)
+    public async Task<Customer> GetCustomerByIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        var customer = await _unitOfWork.CustomerRepository.GetAsync(false, null, x => x.Id == id);
+
+        if (customer == null)
+        {
+            throw new EcommerceMinifiedDomainException("Customer not found", ErrorCodeEnum.NotFound);
+        }
+
+        return customer;
     }
 
-    public Task<List<Customer>> GetCustomersAsync()
+    public async Task<List<Customer>> GetCustomersAsync()
     {
-        throw new NotImplementedException();
+        return await _unitOfWork.CustomerRepository.GetAllAsync();
     }
 
-    public Task<CustomerDto> UpdateCustomerAsync(CustomerDto customer)
+    public async Task<CustomerDto> UpdateCustomerAsync(CustomerDto customer)
     {
-        throw new NotImplementedException();
+        var exists = await _unitOfWork.CustomerRepository.GetAsync(true, null, x => x.Id == customer.Id);
+
+        if (exists == null)
+        {
+            throw new EcommerceMinifiedDomainException("Customer not found", ErrorCodeEnum.NotFound);
+        }
+
+        var updatedCustomer = _mapper.Map<Customer>(customer);
+
+        _unitOfWork.CustomerRepository.Update(updatedCustomer);
+        await _unitOfWork.CommitPostresAsync();
+
+        return _mapper.Map<CustomerDto>(updatedCustomer);
     }
 }
