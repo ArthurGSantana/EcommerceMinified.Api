@@ -1,13 +1,14 @@
 using System;
 using EcommerceMinified.Domain.Entity;
+using EcommerceMinified.Domain.ViewModel.DTOs;
 
 namespace EcommerceMinified.Domain.Interfaces.Services;
 
 public interface IProductService
 {
-    Task<Product> GetProductByIdAsync(Guid id);
-    Task<Product> CreateProductAsync(Product product);
-    Task<Product> UpdateProductAsync(Product product);
+    Task<ProductDto> GetProductByIdAsync(Guid id);
+    Task<ProductDto> CreateProductAsync(ProductDto product);
+    Task<ProductDto> UpdateProductAsync(ProductDto product);
     Task DeleteProductAsync(Guid id);
-    Task<List<Product>> GetProductsAsync();
+    Task<List<ProductDto>> GetProductsAsync();
 }
