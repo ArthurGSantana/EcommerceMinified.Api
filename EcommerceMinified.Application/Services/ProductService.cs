@@ -30,14 +30,14 @@ public class ProductService(IUnitOfWork _unitOfWork, IMapper _mapper) : IProduct
 
     public async Task DeleteProductAsync(Guid id)
     {
-        var exists = await _unitOfWork.ProductRepository.GetAsync(false, null, x => x.Id == id);
+        var product = await _unitOfWork.ProductRepository.GetAsync(false, null, x => x.Id == id);
 
-        if (exists == null)
+        if (product == null)
         {
             throw new EcommerceMinifiedDomainException("Product not found", ErrorCodeEnum.NotFound);
         }
 
-        _unitOfWork.ProductRepository.Delete(exists);
+        _unitOfWork.ProductRepository.Delete(product);
         await _unitOfWork.CommitPostresAsync();
     }
 

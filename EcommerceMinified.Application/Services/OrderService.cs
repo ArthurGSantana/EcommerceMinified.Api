@@ -13,7 +13,7 @@ public class OrderService(IUnitOfWork _unitOfWork, IMapper _mapper) : IOrderServ
 {
     public async Task<OrderDto> CreateOrderAsync(OrderDto order)
     {
-        if(order.Items.Count == 0)
+        if (order.Items.Count == 0)
         {
             throw new EcommerceMinifiedDomainException("Order must have at least one item", ErrorCodeEnum.BadRequest);
         }
@@ -38,23 +38,64 @@ public class OrderService(IUnitOfWork _unitOfWork, IMapper _mapper) : IOrderServ
         return _mapper.Map<OrderDto>(newOrder);
     }
 
-    public Task DeleteOrderAsync(Guid id)
+    public async Task DeleteOrderAsync(Guid id)
     {
-        throw new NotImplementedException();
+        var order = await _unitOfWork.OrderRepository.GetAsync(false, null, x => x.Id == id);
+
+        if (order == null)
+        {
+            throw new EcommerceMinifiedDomainException("Order not found", ErrorCodeEnum.NotFound);
+        }
+
+        _unitOfWork.OrderRepository.Delete(order);
+        await _unitOfWork.CommitPostresAsync();
     }
 
-    public Task<OrderDto> GetOrderByIdAsync(Guid id)
+    public async Task<OrderDto> GetOrderByIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        var order = await _unitOfWork.OrderRepository.GetAsync(false, null, x => x.Id == id);
+
+        if (order == null)
+        {
+            throw new EcommerceMinifiedDomainException("Order not found", ErrorCodeEnum.NotFound);
+        }
+
+        return _mapper.Map<OrderDto>(order);
     }
 
-    public Task<List<OrderDto>> GetOrdersAsync()
+    public async Task<List<OrderDto>> GetOrdersAsync()
     {
-        throw new NotImplementedException();
+        var orders = await _unitOfWork.OrderRepository.GetAllAsync();
+        return _mapper.Map<List<OrderDto>>(orders);
     }
 
-    public Task<OrderDto> UpdateOrderAsync(OrderDto order)
+    public async Task<OrderDto> UpdateOrderAsync(OrderDto order)
     {
-        throw new NotImplementedException();
+        var exists = await _unitOfWork.OrderRepository.GetAsync(true, null, x => x.Id == order.Id);
+
+        if (exists == null)
+        {
+            throw new EcommerceMinifiedDomainException("Order not found", ErrorCodeEnum.NotFound);
+        }
+
+        var updatedOrder = new Order
+        {
+            Id = exists.Id,
+            CustomerId = exists.CustomerId,
+            Total = order.Total,
+            Status = order.Status,
+            OrderDate = order.OrderDate,
+            Items = order.Items.Select(x => new OrderItem
+            {
+                ProductId = x.ProductId,
+                Quantity = x.Quantity,
+                Price = x.Price
+            }).ToList()
+        };
+
+        _unitOfWork.OrderRepository.Update(updatedOrder);
+        await _unitOfWork.CommitPostresAsync();
+
+        return _mapper.Map<OrderDto>(updatedOrder);
     }
 }

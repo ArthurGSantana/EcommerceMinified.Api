@@ -30,14 +30,14 @@ public class CustomerService(IUnitOfWork _unitOfWork, IMapper _mapper) : ICustom
 
     public async Task DeleteCustomerAsync(Guid id)
     {
-        var exists = await _unitOfWork.CustomerRepository.GetAsync(false, null, x => x.Id == id);
+        var customer = await _unitOfWork.CustomerRepository.GetAsync(false, null, x => x.Id == id);
 
-        if (exists == null)
+        if (customer == null)
         {
             throw new EcommerceMinifiedDomainException("Customer not found", ErrorCodeEnum.NotFound);
         }
 
-        _unitOfWork.CustomerRepository.Delete(exists);
+        _unitOfWork.CustomerRepository.Delete(customer);
         await _unitOfWork.CommitPostresAsync();
     }
 
