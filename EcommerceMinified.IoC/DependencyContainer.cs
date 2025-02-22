@@ -5,6 +5,10 @@ using EcommerceMinified.Data.Repository;
 using EcommerceMinified.Domain.Interfaces.Repository;
 using EcommerceMinified.Domain.Interfaces.Services;
 using EcommerceMinified.Domain.Mapper;
+using EcommerceMinified.Domain.Validators;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -43,6 +47,12 @@ public class DependencyContainer
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<IOrderService, OrderService>();
+        #endregion
+
+        #region FluentValidation
+        services.AddFluentValidationAutoValidation();
+        services.AddValidatorsFromAssemblyContaining<CustomerValidator>();
+        services.Configure<ApiBehaviorOptions>(options => { options.SuppressModelStateInvalidFilter = true; });
         #endregion
     }
 }
