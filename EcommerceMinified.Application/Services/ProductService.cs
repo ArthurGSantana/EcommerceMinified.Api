@@ -23,7 +23,7 @@ public class ProductService(IUnitOfWork _unitOfWork, IMapper _mapper) : IProduct
         var newProduct = _mapper.Map<Product>(product);
 
         _unitOfWork.ProductRepository.Insert(newProduct);
-        await _unitOfWork.CommitPostresAsync();
+        await _unitOfWork.CommitPostgresAsync();
 
         return _mapper.Map<ProductDto>(newProduct);
     }
@@ -38,7 +38,7 @@ public class ProductService(IUnitOfWork _unitOfWork, IMapper _mapper) : IProduct
         }
 
         _unitOfWork.ProductRepository.Delete(product);
-        await _unitOfWork.CommitPostresAsync();
+        await _unitOfWork.CommitPostgresAsync();
     }
 
     public async Task<ProductDto> GetProductByIdAsync(Guid id)
@@ -71,7 +71,7 @@ public class ProductService(IUnitOfWork _unitOfWork, IMapper _mapper) : IProduct
         var updatedProduct = _mapper.Map<Product>(Product);
 
         _unitOfWork.ProductRepository.Update(updatedProduct);
-        await _unitOfWork.CommitPostresAsync();
+        await _unitOfWork.CommitPostgresAsync();
 
         return _mapper.Map<ProductDto>(updatedProduct);
     }

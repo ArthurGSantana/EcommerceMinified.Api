@@ -12,5 +12,5 @@ public interface IUnitOfWork
     IRepositoryBase<OrderItem> OrderItemRepository { get; }
     IRepositoryBase<Address> AddressRepository { get; }
 
-    Task CommitPostresAsync();
+    Task CommitPostgresAsync();
 }

@@ -33,7 +33,7 @@ public class OrderService(IUnitOfWork _unitOfWork, IMapper _mapper) : IOrderServ
         };
 
         _unitOfWork.OrderRepository.Insert(newOrder);
-        await _unitOfWork.CommitPostresAsync();
+        await _unitOfWork.CommitPostgresAsync();
 
         return _mapper.Map<OrderDto>(newOrder);
     }
@@ -48,7 +48,7 @@ public class OrderService(IUnitOfWork _unitOfWork, IMapper _mapper) : IOrderServ
         }
 
         _unitOfWork.OrderRepository.Delete(order);
-        await _unitOfWork.CommitPostresAsync();
+        await _unitOfWork.CommitPostgresAsync();
     }
 
     public async Task<OrderDto> GetOrderByIdAsync(Guid id)
@@ -94,7 +94,7 @@ public class OrderService(IUnitOfWork _unitOfWork, IMapper _mapper) : IOrderServ
         };
 
         _unitOfWork.OrderRepository.Update(updatedOrder);
-        await _unitOfWork.CommitPostresAsync();
+        await _unitOfWork.CommitPostgresAsync();
 
         return _mapper.Map<OrderDto>(updatedOrder);
     }

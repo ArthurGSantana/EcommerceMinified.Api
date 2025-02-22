@@ -23,7 +23,7 @@ public class CustomerService(IUnitOfWork _unitOfWork, IMapper _mapper) : ICustom
         var newCustomer = _mapper.Map<Customer>(customer);
 
         _unitOfWork.CustomerRepository.Insert(newCustomer);
-        await _unitOfWork.CommitPostresAsync();
+        await _unitOfWork.CommitPostgresAsync();
 
         return _mapper.Map<CustomerDto>(newCustomer);
     }
@@ -38,7 +38,7 @@ public class CustomerService(IUnitOfWork _unitOfWork, IMapper _mapper) : ICustom
         }
 
         _unitOfWork.CustomerRepository.Delete(customer);
-        await _unitOfWork.CommitPostresAsync();
+        await _unitOfWork.CommitPostgresAsync();
     }
 
     public async Task<Customer> GetCustomerByIdAsync(Guid id)
@@ -70,7 +70,7 @@ public class CustomerService(IUnitOfWork _unitOfWork, IMapper _mapper) : ICustom
         var updatedCustomer = _mapper.Map<Customer>(customer);
 
         _unitOfWork.CustomerRepository.Update(updatedCustomer);
-        await _unitOfWork.CommitPostresAsync();
+        await _unitOfWork.CommitPostgresAsync();
 
         return _mapper.Map<CustomerDto>(updatedCustomer);
     }
