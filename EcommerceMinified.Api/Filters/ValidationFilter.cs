@@ -8,10 +8,7 @@ namespace EcommerceMinified.Api.Filters;
 
 public class ValidationFilter(ILogger<ValidationFilter> _logger) : IActionFilter
 {
-    public void OnActionExecuted(ActionExecutedContext context)
-    {
-        throw new NotImplementedException();
-    }
+    public void OnActionExecuted(ActionExecutedContext context) { }
 
     public void OnActionExecuting(ActionExecutingContext context)
     {
