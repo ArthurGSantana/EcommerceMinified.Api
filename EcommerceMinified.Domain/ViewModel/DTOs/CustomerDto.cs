@@ -9,5 +9,5 @@ public class CustomerDto : BaseDto
     public string Password { get; set; } = string.Empty;
     public string? Phone { get; set; } = string.Empty;
     public string? Image { get; set; } = string.Empty;
-    public AddressDto Address { get; set; } = new();
+    public AddressDto? Address { get; set; }
 }

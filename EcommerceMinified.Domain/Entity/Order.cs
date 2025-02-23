@@ -9,6 +9,6 @@ public class Order : Base
     public decimal Total { get; set; }
     public OrderStatusEnum Status { get; set; }
     public DateTime? OrderDate { get; set; }
-    public List<OrderItem> Items { get; set; } = new();
+    public List<OrderItem>? Items { get; set; }
     
 }

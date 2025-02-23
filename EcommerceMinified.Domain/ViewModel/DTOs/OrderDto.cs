@@ -10,5 +10,5 @@ public class OrderDto : BaseDto
     public decimal Total { get; set; }
     public OrderStatusEnum Status { get; set; }
     public DateTime? OrderDate { get; set; }
-    public List<OrderItemDto> Items { get; set; } = new();
+    public List<OrderItemDto>? Items { get; set; }
 }
