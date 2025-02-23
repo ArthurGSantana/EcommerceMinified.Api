@@ -22,7 +22,8 @@ public class CustomerValidator : AbstractValidator<CustomerDto>
             .NotEmpty()
             .WithMessage("Password is required")
             .MinimumLength(6)
-            .WithMessage("Password must have at least 6 characters");
+            .WithMessage("Password must have at least 6 characters")
+            .When(x => x.Id == Guid.Empty);
 
         RuleFor(x => x.Phone)
             .NotEmpty()

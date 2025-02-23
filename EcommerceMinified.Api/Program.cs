@@ -1,4 +1,6 @@
+using System.Text.Json.Serialization;
 using Desafio4.Api.Filters;
+using EcommerceMinified.Api.Filters;
 using EcommerceMinified.IoC;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,7 +8,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 DependencyContainer.RegisterServices(builder.Services, builder.Configuration.GetConnectionString("DatabasePostgres")!);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<ValidationFilter>();
+}).AddJsonOptions(options => options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
