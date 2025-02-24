@@ -59,6 +59,7 @@ public class ProductService(IUnitOfWork _unitOfWork, IMapper _mapper) : IProduct
         return _mapper.Map<List<ProductDto>>(products);
     }
 
+//NAO PODE EXISTIR UM FLUXO DE UPDATE SEM USR O ITEM JA EXISTENTE COMO BASE DE TROCA
     public async Task<ProductDto> UpdateProductAsync(ProductDto Product)
     {
         var exists = await _unitOfWork.ProductRepository.GetAsync(true, null, x => x.Id == Product.Id);
