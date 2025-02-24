@@ -59,21 +59,24 @@ public class ProductService(IUnitOfWork _unitOfWork, IMapper _mapper) : IProduct
         return _mapper.Map<List<ProductDto>>(products);
     }
 
-//NAO PODE EXISTIR UM FLUXO DE UPDATE SEM USR O ITEM JA EXISTENTE COMO BASE DE TROCA
     public async Task<ProductDto> UpdateProductAsync(ProductDto Product)
     {
-        var exists = await _unitOfWork.ProductRepository.GetAsync(true, null, x => x.Id == Product.Id);
+        var currentProduct = await _unitOfWork.ProductRepository.GetAsync(true, null, x => x.Id == Product.Id);
 
-        if (exists == null)
+        if (currentProduct == null)
         {
             throw new EcommerceMinifiedDomainException("Product not found", ErrorCodeEnum.NotFound);
         }
 
-        var updatedProduct = _mapper.Map<Product>(Product);
+        currentProduct.Name = Product.Name;
+        currentProduct.Description = Product.Description;
+        currentProduct.Price = Product.Price;
+        currentProduct.Stock = Product.Stock;
+        currentProduct.Image = Product.Image;
 
-        _unitOfWork.ProductRepository.Update(updatedProduct);
+        _unitOfWork.ProductRepository.Update(currentProduct);
         await _unitOfWork.CommitPostgresAsync();
 
-        return _mapper.Map<ProductDto>(updatedProduct);
+        return _mapper.Map<ProductDto>(currentProduct);
     }
 }
