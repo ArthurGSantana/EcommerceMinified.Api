@@ -6,6 +6,7 @@ using EcommerceMinified.Domain.Exceptions;
 using EcommerceMinified.Domain.Interfaces.Repository;
 using EcommerceMinified.Domain.Interfaces.Services;
 using EcommerceMinified.Domain.ViewModel.DTOs;
+using Microsoft.EntityFrameworkCore;
 
 namespace EcommerceMinified.Application.Services;
 
@@ -31,7 +32,7 @@ public class OrderService(IUnitOfWork _unitOfWork, IMapper _mapper) : IOrderServ
             CustomerId = order.CustomerId,
             Total = order.Items.Sum(x => x.Quantity * products.First(p => p.Id == x.ProductId).Price),
             Status = OrderStatusEnum.Pending,
-            OrderDate = DateTime.Now,
+            OrderDate = DateTime.UtcNow,
             Items = order.Items.Select(x => new OrderItem
             {
                 ProductId = x.ProductId,
@@ -61,7 +62,7 @@ public class OrderService(IUnitOfWork _unitOfWork, IMapper _mapper) : IOrderServ
 
     public async Task<OrderDto> GetOrderByIdAsync(Guid id)
     {
-        var order = await _unitOfWork.OrderRepository.GetAsync(false, null, x => x.Id == id);
+        var order = await _unitOfWork.OrderRepository.GetAsync(false, x => x.Include(o => o.Items!), x => x.Id == id);
 
         if (order == null)
         {
