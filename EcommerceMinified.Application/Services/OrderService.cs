@@ -13,7 +13,7 @@ public class OrderService(IUnitOfWork _unitOfWork, IMapper _mapper) : IOrderServ
 {
     public async Task<OrderDto> CreateOrderAsync(OrderDto order)
     {
-        if (order.Items.Count == 0)
+        if (order.Items == null || order?.Items?.Count == 0)
         {
             throw new EcommerceMinifiedDomainException("Order must have at least one item", ErrorCodeEnum.BadRequest);
         }
@@ -21,9 +21,9 @@ public class OrderService(IUnitOfWork _unitOfWork, IMapper _mapper) : IOrderServ
         var newOrder = new Order
         {
             CustomerId = order.CustomerId,
-            Total = order.Total,
-            Status = order.Status,
-            OrderDate = order.OrderDate,
+            Total = order.Items.Sum(x => x.Price * x.Quantity),
+            Status = OrderStatusEnum.Pending,
+            OrderDate = DateTime.Now,
             Items = order.Items.Select(x => new OrderItem
             {
                 ProductId = x.ProductId,
@@ -71,31 +71,18 @@ public class OrderService(IUnitOfWork _unitOfWork, IMapper _mapper) : IOrderServ
 
     public async Task<OrderDto> UpdateOrderAsync(OrderDto order)
     {
-        var exists = await _unitOfWork.OrderRepository.GetAsync(true, null, x => x.Id == order.Id);
+        var currentOrder = await _unitOfWork.OrderRepository.GetAsync(true, null, x => x.Id == order.Id);
 
-        if (exists == null)
+        if (currentOrder == null)
         {
             throw new EcommerceMinifiedDomainException("Order not found", ErrorCodeEnum.NotFound);
         }
 
-        var updatedOrder = new Order
-        {
-            Id = exists.Id,
-            CustomerId = exists.CustomerId,
-            Total = order.Total,
-            Status = order.Status,
-            OrderDate = order.OrderDate,
-            Items = order.Items.Select(x => new OrderItem
-            {
-                ProductId = x.ProductId,
-                Quantity = x.Quantity,
-                Price = x.Price
-            }).ToList()
-        };
+        currentOrder.Status = order.Status;
 
-        _unitOfWork.OrderRepository.Update(updatedOrder);
+        _unitOfWork.OrderRepository.Update(currentOrder);
         await _unitOfWork.CommitPostgresAsync();
 
-        return _mapper.Map<OrderDto>(updatedOrder);
+        return _mapper.Map<OrderDto>(currentOrder);
     }
 }
