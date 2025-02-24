@@ -13,22 +13,30 @@ public class OrderService(IUnitOfWork _unitOfWork, IMapper _mapper) : IOrderServ
 {
     public async Task<OrderDto> CreateOrderAsync(OrderDto order)
     {
-        if (order.Items == null || order?.Items?.Count == 0)
+        if (order.Items == null || order.Items.Count == 0)
         {
             throw new EcommerceMinifiedDomainException("Order must have at least one item", ErrorCodeEnum.BadRequest);
+        }
+
+        var productIds = order.Items.Select(x => x.ProductId).ToList();
+        var products = await _unitOfWork.ProductRepository.GetFilteredAsync(false, null, x => productIds.Contains(x.Id));
+
+        if (products.Count != productIds.Count)
+        {
+            throw new EcommerceMinifiedDomainException("One or more products not found", ErrorCodeEnum.NotFound);
         }
 
         var newOrder = new Order
         {
             CustomerId = order.CustomerId,
-            Total = order.Items.Sum(x => x.Price * x.Quantity),
+            Total = order.Items.Sum(x => x.Quantity * products.First(p => p.Id == x.ProductId).Price),
             Status = OrderStatusEnum.Pending,
             OrderDate = DateTime.Now,
             Items = order.Items.Select(x => new OrderItem
             {
                 ProductId = x.ProductId,
                 Quantity = x.Quantity,
-                Price = x.Price
+                Price = products.First(p => p.Id == x.ProductId).Price
             }).ToList()
         };
 
