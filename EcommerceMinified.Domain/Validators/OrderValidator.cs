@@ -15,7 +15,8 @@ public class OrderValidator : AbstractValidator<OrderDto>
 
         RuleFor(x => x.Items)
             .NotEmpty()
-            .WithMessage("Order items are required");
+            .WithMessage("Order items are required")
+            .When(x => x.Id == null);
 
         RuleForEach(x => x.Items)
             .SetValidator(new OrderItemValidator());
