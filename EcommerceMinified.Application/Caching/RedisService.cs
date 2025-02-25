@@ -14,7 +14,7 @@ public class RedisService(IDistributedCache _distributedCache) : IRedisService
         return value is null ? default : JsonSerializer.Deserialize<T>(value);
     }
 
-    public void SetAsync<T>(Guid id, T value, TimeSpan? expiration = null)
+    public async Task SetAsync<T>(Guid id, T value, TimeSpan? expiration = null)
     {
         var key = $"{nameof(T)}_{id}";
         var options = new DistributedCacheEntryOptions();
@@ -24,7 +24,7 @@ public class RedisService(IDistributedCache _distributedCache) : IRedisService
             options.AbsoluteExpirationRelativeToNow = expiration;
         }
 
-        _distributedCache.SetString(key, JsonSerializer.Serialize(value), options);
+        await _distributedCache.SetStringAsync(key, JsonSerializer.Serialize(value), options);
     }
 
     public void Remove(string key)

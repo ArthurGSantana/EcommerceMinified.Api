@@ -1,7 +1,9 @@
 using AutoMapper;
+using EcommerceMinified.Application.Caching;
 using EcommerceMinified.Application.Services;
 using EcommerceMinified.Data.Postgres.Context;
 using EcommerceMinified.Data.Repository;
+using EcommerceMinified.Domain.Interfaces.Caching;
 using EcommerceMinified.Domain.Interfaces.Repository;
 using EcommerceMinified.Domain.Interfaces.Services;
 using EcommerceMinified.Domain.Mapper;
@@ -61,6 +63,7 @@ public class DependencyContainer
             options.Configuration = redisConnectionString;
             options.InstanceName = "EcommerceMinified";
         });
+        services.AddScoped<IRedisService, RedisService>();
         #endregion
     }
 }

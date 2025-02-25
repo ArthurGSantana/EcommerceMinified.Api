@@ -3,13 +3,14 @@ using AutoMapper;
 using EcommerceMinified.Domain.Entity;
 using EcommerceMinified.Domain.Enum;
 using EcommerceMinified.Domain.Exceptions;
+using EcommerceMinified.Domain.Interfaces.Caching;
 using EcommerceMinified.Domain.Interfaces.Repository;
 using EcommerceMinified.Domain.Interfaces.Services;
 using EcommerceMinified.Domain.ViewModel.DTOs;
 
 namespace EcommerceMinified.Application.Services;
 
-public class ProductService(IUnitOfWork _unitOfWork, IMapper _mapper) : IProductService
+public class ProductService(IUnitOfWork _unitOfWork, IMapper _mapper, IRedisService _redisService) : IProductService
 {
     public async Task<ProductDto> CreateProductAsync(ProductDto product)
     {
@@ -43,11 +44,18 @@ public class ProductService(IUnitOfWork _unitOfWork, IMapper _mapper) : IProduct
 
     public async Task<ProductDto> GetProductByIdAsync(Guid id)
     {
-        var product = await _unitOfWork.ProductRepository.GetAsync(false, null, x => x.Id == id);
+        var product = await _redisService.GetAsync<Product>(id);
 
-        if (product == null)
+        if (product is null)
         {
-            throw new EcommerceMinifiedDomainException("Product not found", ErrorCodeEnum.NotFound);
+            product = await _unitOfWork.ProductRepository.GetAsync(false, null, x => x.Id == id);
+
+            if (product == null)
+            {
+                throw new EcommerceMinifiedDomainException("Product not found", ErrorCodeEnum.NotFound);
+            }
+
+            await _redisService.SetAsync(id, product);
         }
 
         return _mapper.Map<ProductDto>(product);
