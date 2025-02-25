@@ -16,7 +16,7 @@ namespace EcommerceMinified.IoC;
 
 public class DependencyContainer
 {
-    public static void RegisterServices(IServiceCollection services, string postgresConnectionString)
+    public static void RegisterServices(IServiceCollection services, string postgresConnectionString, string redisConnectionString)
     {
         #region Postgres
         services.AddDbContext<PostgresDbContext>(options =>
@@ -53,6 +53,14 @@ public class DependencyContainer
         services.AddFluentValidationAutoValidation();
         services.AddValidatorsFromAssemblyContaining<CustomerValidator>();
         services.Configure<ApiBehaviorOptions>(options => { options.SuppressModelStateInvalidFilter = true; });
+        #endregion
+
+        #region Redis
+        services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = redisConnectionString;
+            options.InstanceName = "EcommerceMinified";
+        });
         #endregion
     }
 }
