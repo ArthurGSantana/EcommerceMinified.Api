@@ -19,10 +19,7 @@ public class RedisService(IDistributedCache _distributedCache) : IRedisService
         var key = $"{nameof(T)}_{id}";
         var options = new DistributedCacheEntryOptions();
 
-        if (expiration.HasValue)
-        {
-            options.AbsoluteExpirationRelativeToNow = expiration;
-        }
+        options.AbsoluteExpirationRelativeToNow = expiration.HasValue ? expiration.Value : TimeSpan.FromMinutes(5);
 
         await _distributedCache.SetStringAsync(key, JsonSerializer.Serialize(value), options);
     }
