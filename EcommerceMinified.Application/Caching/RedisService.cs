@@ -4,7 +4,6 @@ using EcommerceMinified.Domain.Interfaces.Caching;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Polly;
-using Polly.Caching;
 using Polly.CircuitBreaker;
 
 namespace EcommerceMinified.Application.Caching;
@@ -12,7 +11,7 @@ namespace EcommerceMinified.Application.Caching;
 public class RedisService : IRedisService
 {
     private readonly IDistributedCache _cache;
-    protected readonly ILogger Logger;
+    protected readonly ILogger<RedisService> Logger;
     private readonly TimeSpan _circuitBreakTime = TimeSpan.FromSeconds(60);
     protected readonly AsyncCircuitBreakerPolicy CircuitBreakerPolicy;
     private readonly int redisTimeoutInMilliseconds = 1000;
@@ -20,7 +19,7 @@ public class RedisService : IRedisService
     private static readonly int _redisCacheValidatyMinutes = 5;
 
 
-    public RedisService(ILogger logger, IDistributedCache cache)
+    public RedisService(ILogger<RedisService> logger, IDistributedCache cache)
     {
         Logger = logger;
         _cache = cache;
@@ -45,9 +44,8 @@ public class RedisService : IRedisService
         try
         {
             var key = $"{nameof(T)}_{id}";
-            var policyWrap = Policy.WrapAsync(CircuitBreakerPolicy);
 
-            var result = await policyWrap.ExecuteAsync(async (_) =>
+            var result = await CircuitBreakerPolicy.ExecuteAsync(async (_) =>
             {
                 var response = await _cache.GetStringAsync(key);
 
@@ -91,7 +89,7 @@ public class RedisService : IRedisService
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "[CacheRepository][SetValueJSONAsync] Erro ao inserir registro no redis, key: {@keyJSON}, value: {@value}, erro: {@message}",
+            Logger.LogError(ex, "Error setting value in Redis, key: {@keyJSON}, value: {@value}, erro: {@message}",
                              key, JsonSerializer.Serialize(value), ex.Message);
         }
     }
