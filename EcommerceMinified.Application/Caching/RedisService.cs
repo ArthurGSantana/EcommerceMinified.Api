@@ -2,30 +2,102 @@ using System;
 using System.Text.Json;
 using EcommerceMinified.Domain.Interfaces.Caching;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
+using Polly;
+using Polly.Caching;
+using Polly.CircuitBreaker;
 
 namespace EcommerceMinified.Application.Caching;
 
-public class RedisService(IDistributedCache _distributedCache) : IRedisService
+public class RedisService : IRedisService
 {
+    private readonly IDistributedCache _cache;
+    protected readonly ILogger Logger;
+    private readonly TimeSpan _circuitBreakTime = TimeSpan.FromSeconds(60);
+    protected readonly AsyncCircuitBreakerPolicy CircuitBreakerPolicy;
+    private readonly int redisTimeoutInMilliseconds = 1000;
+    private readonly int _exceptionCount = 5;
+    private static readonly int _redisCacheValidatyMinutes = 5;
+
+
+    public RedisService(ILogger logger, IDistributedCache cache)
+    {
+        Logger = logger;
+        _cache = cache;
+        
+        CircuitBreakerPolicy = Policy
+            .Handle<Exception>()
+            .CircuitBreakerAsync(_exceptionCount, _circuitBreakTime,
+                onBreak: (ex, t) =>
+                {
+                    logger.LogWarning(ex, $"Circuit broken! Time: {t}");
+                },
+                onReset: () =>
+                {
+                    logger.LogWarning($"Circuit reset!");
+                }
+            );
+    }
+
+
     public async Task<T?> GetAsync<T>(Guid id)
     {
-        var key = $"{nameof(T)}_{id}";
-        var value = await _distributedCache.GetStringAsync(key);
-        return value is null ? default : JsonSerializer.Deserialize<T>(value);
+        try
+        {
+            var key = $"{nameof(T)}_{id}";
+            var policyWrap = Policy.WrapAsync(CircuitBreakerPolicy);
+
+            var result = await policyWrap.ExecuteAsync(async (_) =>
+            {
+                var response = await _cache.GetStringAsync(key);
+
+                if (response == null)
+                {
+                    return default;
+                }
+                var serializedResponse = JsonSerializer.Deserialize<T>(response);
+
+                return serializedResponse;
+
+            }, new CancellationTokenSource(TimeSpan.FromMilliseconds(redisTimeoutInMilliseconds)).Token);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error getting value from Redis");
+        }
+
+        return default;
     }
 
     public async Task SetAsync<T>(Guid id, T value, TimeSpan? expiration = null)
     {
         var key = $"{nameof(T)}_{id}";
-        var options = new DistributedCacheEntryOptions();
 
-        options.AbsoluteExpirationRelativeToNow = expiration.HasValue ? expiration.Value : TimeSpan.FromMinutes(5);
+        try
+        {
+            var options = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = expiration.HasValue ? expiration.Value : TimeSpan.FromMinutes(_redisCacheValidatyMinutes)
+            };
 
-        await _distributedCache.SetStringAsync(key, JsonSerializer.Serialize(value), options);
+            var policyWrap = Policy.WrapAsync(CircuitBreakerPolicy, Policy.NoOpAsync());
+
+            await policyWrap.ExecuteAsync(async (_) =>
+            {
+                await _cache.SetStringAsync(key, JsonSerializer.Serialize(value), options, CancellationToken.None);
+            }, new CancellationTokenSource(TimeSpan.FromMilliseconds(redisTimeoutInMilliseconds)).Token);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "[CacheRepository][SetValueJSONAsync] Erro ao inserir registro no redis, key: {@keyJSON}, value: {@value}, erro: {@message}",
+                             key, JsonSerializer.Serialize(value), ex.Message);
+        }
     }
 
     public void Remove(string key)
     {
-        _distributedCache.Remove(key);
+        _cache.Remove(key);
     }
 }
