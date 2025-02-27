@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using Microsoft.Extensions.Logging;
+using Polly.Registry;
 using RestSharp;
 
 namespace EcommerceMinified.Data.Rest.Repository;
@@ -10,40 +11,56 @@ public class BaseRestRepository
     protected readonly ILogger Logger;
     protected readonly RestClient Client;
     public EventHandler? OnUnauthorizedResponse;
-    protected int RequestTimeout { get; set; }
+    private readonly ResiliencePipelineProvider<string> _pipelineProvider;
+    private readonly string _resilienceKeyDefault = "default";
 
-    public BaseRestRepository(ILogger logger, string baseUrl)
+    public BaseRestRepository(ILogger logger, ResiliencePipelineProvider<string> pipelineProvider, string baseUrl)
     {
         Logger = logger;
-        Client = new RestClient(baseUrl);
-        RequestTimeout = 10;
+        _pipelineProvider = pipelineProvider;
 
         Client = new RestClient(new RestClientOptions(baseUrl));
     }
 
-    protected async Task<T> ExecuteOrThrowAsync<T>(RestRequest request, bool throwException = false)
+    protected async Task<T> ExecuteOrThrowAsync<T>(RestRequest request, bool throwException = false, string? resilienceKey = null)
     {
-        var response = await Client.ExecuteAsync<T>(request, CancellationToken.None);
+        resilienceKey ??= _resilienceKeyDefault;
 
-        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        var pipeline = _pipelineProvider.GetPipeline(resilienceKey);
+
+        try
         {
-            OnUnauthorizedResponse?.Invoke(response, EventArgs.Empty);
+            var response = await pipeline.ExecuteAsync(async (_) =>
+            {
+                var response = await Client.ExecuteAsync<T>(request, CancellationToken.None);
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    OnUnauthorizedResponse?.Invoke(response, EventArgs.Empty);
+                }
+
+                if (response.ErrorException != null && throwException)
+                {
+                    throw new InvalidOperationException(
+                        $"Parse error of the BaseRestRepository response  ({request.Resource}): {response.StatusCode} - {response.Content}",
+                        response.ErrorException);
+                }
+
+                if (!response.IsSuccessful && throwException)
+                {
+                    throw new HttpRequestException(
+                        $"Response error of BaseRestRepository ({request.Resource}): {response.StatusCode} - {response.Content}",
+                        null, response.StatusCode);
+                }
+
+                return response.Data!;
+            });
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error on BaseRestRepository.ExecuteOrThrowAsync");
         }
 
-        if (response.ErrorException != null && throwException)
-        {
-            throw new InvalidOperationException(
-                $"Parse error of the BaseRestRepository response  ({request.Resource}): {response.StatusCode} - {response.Content}",
-                response.ErrorException);
-        }
-
-        if (!response.IsSuccessful && throwException)
-        {
-            throw new HttpRequestException(
-                $"Response error of BaseRestRepository ({request.Resource}): {response.StatusCode} - {response.Content}",
-                null, response.StatusCode);
-        }
-
-        return response.Data!;
+        return default!;
     }
 }
