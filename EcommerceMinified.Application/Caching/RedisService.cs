@@ -10,11 +10,11 @@ namespace EcommerceMinified.Application.Caching;
 
 public class RedisService : IRedisService
 {
-    private readonly IDistributedCache _cache;
     protected readonly ILogger<RedisService> Logger;
-    private readonly TimeSpan _circuitBreakTime = TimeSpan.FromSeconds(60);
+    private readonly IDistributedCache _cache;
     protected readonly AsyncCircuitBreakerPolicy CircuitBreakerPolicy;
-    private readonly int redisTimeoutInMilliseconds = 1000;
+    private readonly TimeSpan _circuitBreakTime = TimeSpan.FromSeconds(60);
+    private readonly int _redisTimeoutInMilliseconds = 1000;
     private readonly int _exceptionCount = 5;
     private static readonly int _redisCacheValidatyMinutes = 5;
 
@@ -23,7 +23,7 @@ public class RedisService : IRedisService
     {
         Logger = logger;
         _cache = cache;
-        
+
         CircuitBreakerPolicy = Policy
             .Handle<Exception>()
             .CircuitBreakerAsync(_exceptionCount, _circuitBreakTime,
@@ -37,7 +37,6 @@ public class RedisService : IRedisService
                 }
             );
     }
-
 
     public async Task<T?> GetAsync<T>(Guid id)
     {
@@ -57,7 +56,7 @@ public class RedisService : IRedisService
 
                 return serializedResponse;
 
-            }, new CancellationTokenSource(TimeSpan.FromMilliseconds(redisTimeoutInMilliseconds)).Token);
+            }, new CancellationTokenSource(TimeSpan.FromMilliseconds(_redisTimeoutInMilliseconds)).Token);
 
             return result;
         }
@@ -85,7 +84,7 @@ public class RedisService : IRedisService
             await policyWrap.ExecuteAsync(async (_) =>
             {
                 await _cache.SetStringAsync(key, JsonSerializer.Serialize(value), options, CancellationToken.None);
-            }, new CancellationTokenSource(TimeSpan.FromMilliseconds(redisTimeoutInMilliseconds)).Token);
+            }, new CancellationTokenSource(TimeSpan.FromMilliseconds(_redisTimeoutInMilliseconds)).Token);
         }
         catch (Exception ex)
         {
