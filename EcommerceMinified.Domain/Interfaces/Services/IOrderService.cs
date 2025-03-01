@@ -10,4 +10,5 @@ public interface IOrderService
     Task<OrderDto> UpdateOrderAsync(OrderDto order);
     Task DeleteOrderAsync(Guid id);
     Task<List<OrderDto>> GetOrdersAsync();
+    Task<FreightResponseDto> GetFreightInfoAsync(FreightRequestDto freightRequest);
 }

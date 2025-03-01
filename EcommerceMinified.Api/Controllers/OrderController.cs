@@ -53,4 +53,12 @@ public class OrderController(IOrderService _orderService) : ControllerBase
 
         return NoContent();
     }
+
+    [HttpPost("Freight-Info")]
+    public async Task<IActionResult> GetFreightInfo(FreightRequestDto freightRequest)
+    {
+        var freight = await _orderService.GetFreightInfoAsync(freightRequest);
+
+        return Ok(freight);
+    }
 }

@@ -18,7 +18,6 @@ public class RedisService : IRedisService
     private readonly int _exceptionCount = 5;
     private static readonly int _redisCacheValidatyMinutes = 5;
 
-
     public RedisService(ILogger<RedisService> logger, IDistributedCache cache)
     {
         Logger = logger;

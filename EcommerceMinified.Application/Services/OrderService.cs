@@ -4,13 +4,14 @@ using EcommerceMinified.Domain.Entity;
 using EcommerceMinified.Domain.Enum;
 using EcommerceMinified.Domain.Exceptions;
 using EcommerceMinified.Domain.Interfaces.Repository;
+using EcommerceMinified.Domain.Interfaces.RestRepository;
 using EcommerceMinified.Domain.Interfaces.Services;
 using EcommerceMinified.Domain.ViewModel.DTOs;
 using Microsoft.EntityFrameworkCore;
 
 namespace EcommerceMinified.Application.Services;
 
-public class OrderService(IUnitOfWork _unitOfWork, IMapper _mapper) : IOrderService
+public class OrderService(IUnitOfWork _unitOfWork, IMapper _mapper, IHubMinifiedRestRespository _hubMinifiedRestRespository) : IOrderService
 {
     public async Task<OrderDto> CreateOrderAsync(OrderDto order)
     {
@@ -93,5 +94,19 @@ public class OrderService(IUnitOfWork _unitOfWork, IMapper _mapper) : IOrderServ
         await _unitOfWork.CommitPostgresAsync();
 
         return _mapper.Map<OrderDto>(currentOrder);
+    }
+
+    public async Task<FreightResponseDto> GetFreightInfoAsync(FreightRequestDto freightRequest)
+    {
+        var product = await _unitOfWork.ProductRepository.GetAsync(false, null, x => x.Id == freightRequest.ProductId);
+
+        if (product == null)
+        {
+            throw new EcommerceMinifiedDomainException("Product not found", ErrorCodeEnum.NotFound);
+        }
+
+        var response = await _hubMinifiedRestRespository.GetFreightInfoAsync(freightRequest);
+
+        return response;
     }
 }

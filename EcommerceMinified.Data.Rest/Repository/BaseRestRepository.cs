@@ -14,7 +14,7 @@ public class BaseRestRepository
     private readonly ResiliencePipelineProvider<string> _pipelineProvider;
     private readonly string _resilienceKeyDefault = "default";
 
-    public BaseRestRepository(ILogger logger, ResiliencePipelineProvider<string> pipelineProvider, string baseUrl)
+    public BaseRestRepository(ILogger logger, string baseUrl, ResiliencePipelineProvider<string> pipelineProvider)
     {
         Logger = logger;
         _pipelineProvider = pipelineProvider;
@@ -28,9 +28,11 @@ public class BaseRestRepository
 
         var pipeline = _pipelineProvider.GetPipeline(resilienceKey);
 
+        var responseData = default(T);
+
         try
         {
-            var response = await pipeline.ExecuteAsync(async (_) =>
+            responseData = await pipeline.ExecuteAsync(async (_) =>
             {
                 var response = await Client.ExecuteAsync<T>(request, CancellationToken.None);
 
@@ -61,6 +63,6 @@ public class BaseRestRepository
             Logger.LogError(ex, "Error on BaseRestRepository.ExecuteOrThrowAsync");
         }
 
-        return default!;
+        return responseData ?? default!;
     }
 }

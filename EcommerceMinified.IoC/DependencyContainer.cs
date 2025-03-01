@@ -3,8 +3,10 @@ using EcommerceMinified.Application.Caching;
 using EcommerceMinified.Application.Services;
 using EcommerceMinified.Data.Postgres.Context;
 using EcommerceMinified.Data.Repository;
+using EcommerceMinified.Data.Rest.Repository;
 using EcommerceMinified.Domain.Interfaces.Caching;
 using EcommerceMinified.Domain.Interfaces.Repository;
+using EcommerceMinified.Domain.Interfaces.RestRepository;
 using EcommerceMinified.Domain.Interfaces.Services;
 using EcommerceMinified.Domain.Mapper;
 using EcommerceMinified.Domain.Validators;
@@ -52,6 +54,10 @@ public class DependencyContainer
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<IOrderService, OrderService>();
+        #endregion
+
+        #region RestRepository
+        services.AddScoped<IHubMinifiedRestRespository, HubMinifiedRestRespository>();
         #endregion
 
         #region FluentValidation
