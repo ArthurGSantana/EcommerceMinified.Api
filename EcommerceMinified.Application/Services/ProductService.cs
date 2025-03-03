@@ -4,16 +4,19 @@ using EcommerceMinified.Domain.Entity;
 using EcommerceMinified.Domain.Enum;
 using EcommerceMinified.Domain.Exceptions;
 using EcommerceMinified.Domain.Interfaces.Caching;
+using EcommerceMinified.Domain.Interfaces.Publishers;
 using EcommerceMinified.Domain.Interfaces.Repository;
 using EcommerceMinified.Domain.Interfaces.Services;
 using EcommerceMinified.Domain.ViewModel.DTOs;
+using EcommerceMinified.MsgContracts.Command;
 
 namespace EcommerceMinified.Application.Services;
 
-public class ProductService(IUnitOfWork _unitOfWork, IMapper _mapper, IRedisService _redisService) : IProductService
+public class ProductService(IUnitOfWork _unitOfWork, IMapper _mapper, IRedisService _redisService, IProductInfoPublisherService _productInfoPublisherService) : IProductService
 {
     public async Task<ProductDto> CreateProductAsync(ProductDto product)
     {
+        var random = new Random();
         var exists = await _unitOfWork.ProductRepository.GetAsync(false, null, x => x.Name == product.Name);
 
         if (exists != null)
@@ -25,6 +28,14 @@ public class ProductService(IUnitOfWork _unitOfWork, IMapper _mapper, IRedisServ
 
         _unitOfWork.ProductRepository.Insert(newProduct);
         await _unitOfWork.CommitPostgresAsync();
+
+        var productInfoCommand = new ProductInfoCommand
+        {
+            ProductId = newProduct.Id,
+            ProductName = newProduct.Name,
+            ProductWeight = random.Next(1, 50)
+        };
+        await _productInfoPublisherService.PublishProductInfo(productInfoCommand);
 
         return _mapper.Map<ProductDto>(newProduct);
     }
