@@ -1,10 +1,12 @@
 using AutoMapper;
 using EcommerceMinified.Application.Caching;
+using EcommerceMinified.Application.Publishers;
 using EcommerceMinified.Application.Services;
 using EcommerceMinified.Data.Postgres.Context;
 using EcommerceMinified.Data.Repository;
 using EcommerceMinified.Data.Rest.Repository;
 using EcommerceMinified.Domain.Interfaces.Caching;
+using EcommerceMinified.Domain.Interfaces.Publishers;
 using EcommerceMinified.Domain.Interfaces.Repository;
 using EcommerceMinified.Domain.Interfaces.RestRepository;
 using EcommerceMinified.Domain.Interfaces.Services;
@@ -59,6 +61,7 @@ public class DependencyContainer
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<IOrderService, OrderService>();
+        services.AddScoped<IProductInfoPublisherService, ProductInfoPublisherService>();
         #endregion
 
         #region RestRepository
@@ -108,7 +111,7 @@ public class DependencyContainer
 
         #region MassTransit
         string busConnectionstring = configuration.GetSection("Bus:ConnectionString").Value ?? "";
-        string queueDataReplication = configuration.GetSection("Bus:DataReplicationQueue").Value ?? "";
+        string queueProductInfo = configuration.GetSection("Bus:ProductInfoQueue").Value ?? "";
 
         services.AddMassTransit(x =>
         {
@@ -124,7 +127,7 @@ public class DependencyContainer
             });
         });
 
-        EndpointConvention.Map<ProductInfoCommand>(new Uri($"{busConnectionstring}/{queueDataReplication}"));
+        EndpointConvention.Map<ProductInfoCommand>(new Uri($"{busConnectionstring}/{queueProductInfo}"));
 
         #endregion
     }
