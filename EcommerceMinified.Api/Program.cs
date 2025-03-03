@@ -7,7 +7,7 @@ using EcommerceMinified.IoC;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-DependencyContainer.RegisterServices(builder.Services, builder.Configuration.GetConnectionString("DatabasePostgres")!, builder.Configuration.GetConnectionString("Redis")!);
+DependencyContainer.RegisterServices(builder.Services, builder.Configuration);
 
 builder.Services.AddControllers(options =>
 {

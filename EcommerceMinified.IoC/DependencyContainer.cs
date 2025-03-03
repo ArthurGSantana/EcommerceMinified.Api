@@ -10,10 +10,13 @@ using EcommerceMinified.Domain.Interfaces.RestRepository;
 using EcommerceMinified.Domain.Interfaces.Services;
 using EcommerceMinified.Domain.Mapper;
 using EcommerceMinified.Domain.Validators;
+using EcommerceMinified.MsgContracts.Command;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Polly;
 using Polly.CircuitBreaker;
@@ -23,9 +26,11 @@ namespace EcommerceMinified.IoC;
 
 public class DependencyContainer
 {
-    public static void RegisterServices(IServiceCollection services, string postgresConnectionString, string redisConnectionString)
+    public static void RegisterServices(IServiceCollection services, ConfigurationManager configuration)
     {
         #region Postgres
+        var postgresConnectionString = configuration.GetSection("DatabasePostgres").Value ?? "";
+
         services.AddDbContext<PostgresDbContext>(options =>
             {
                 if (!string.IsNullOrEmpty(postgresConnectionString))
@@ -67,6 +72,8 @@ public class DependencyContainer
         #endregion
 
         #region Redis
+        var redisConnectionString = configuration.GetSection("Redis").Value ?? "";
+
         services.AddStackExchangeRedisCache(options =>
         {
             options.Configuration = redisConnectionString;
@@ -97,6 +104,28 @@ public class DependencyContainer
             builder.AddTimeout(TimeSpan.FromSeconds(5)); // Adiciona um tempo limite de 5 segundos para as operações
         }
         );
+        #endregion
+
+        #region MassTransit
+        string busConnectionstring = configuration.GetSection("Bus:ConnectionString").Value ?? "";
+        string queueDataReplication = configuration.GetSection("Bus:DataReplicationQueue").Value ?? "";
+
+        services.AddMassTransit(x =>
+        {
+            x.UsingRabbitMq((context, cfg) =>
+            {
+                cfg.Host(new Uri(busConnectionstring), h =>
+                {
+                    h.Username("guest");
+                    h.Password("guest");
+                });
+
+                cfg.Publish<ProductInfoCommand>();
+            });
+        });
+
+        EndpointConvention.Map<ProductInfoCommand>(new Uri($"{busConnectionstring}/{queueDataReplication}"));
+
         #endregion
     }
 }

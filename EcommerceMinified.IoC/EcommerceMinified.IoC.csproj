@@ -9,11 +9,14 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.2" />
     <PackageReference Include="AutoMapper" Version="14.0.0" />
     <PackageReference Include="Microsoft.Extensions.Resilience" Version="9.2.0" />
+    <PackageReference Include="MassTransit" Version="8.3.6" />
+    <PackageReference Include="MassTransit.RabbitMQ" Version="8.3.6" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\EcommerceMinified.Application\EcommerceMinified.Application.csproj" />
     <ProjectReference Include="..\EcommerceMinified.Data.Postgres\EcommerceMinified.Data.Postgres.csproj" />
     <ProjectReference Include="..\EcommerceMinified.Data.Rest\EcommerceMinified.Data.Rest.csproj" />
     <ProjectReference Include="..\EcommerceMinified.Data\EcommerceMinified.Data.csproj" />
+    <ProjectReference Include="..\EcommerceMinified.MsgContracts\EcommerceMinified.MsgContracts.csproj" />
   </ItemGroup>
 </Project>
